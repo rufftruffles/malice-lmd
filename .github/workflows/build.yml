@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 22 * * *'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: make build && make tag
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Push
+        run: |
+          docker tag malice/lmd:latest ghcr.io/rufftruffles/malice-lmd:1.0.0
+          docker tag malice/lmd:latest ghcr.io/rufftruffles/malice-lmd:latest
+          docker push ghcr.io/rufftruffles/malice-lmd:1.0.0
+          docker push ghcr.io/rufftruffles/malice-lmd:latest
