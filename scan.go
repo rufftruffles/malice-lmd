@@ -91,10 +91,10 @@ type Hit struct {
 // Pointer fields mirror LMD's null-emitting fields (jstr_or_null /
 // jnum_or_null in the renderer).
 type lmdReport struct {
-	SchemaVersion string       `json:"schema_version"`
-	Scanner       lmdScanner   `json:"scanner"`
-	Host          lmdHost      `json:"host"`
-	Reports       []lmdScan    `json:"reports"`
+	SchemaVersion string     `json:"schema_version"`
+	Scanner       lmdScanner `json:"scanner"`
+	Host          lmdHost    `json:"host"`
+	Reports       []lmdScan  `json:"reports"`
 }
 
 type lmdScanner struct {
@@ -276,8 +276,12 @@ func store(results ResultsData, path string) error {
 	if err := es.Init(); err != nil {
 		return errors.Wrap(err, "failed to initialize elasticsearch")
 	}
+	id := os.Getenv("MALICE_SCANID")
+	if id == "" {
+		id = utils.GetSHA256(path)
+	}
 	return es.StorePluginResults(database.PluginResults{
-		ID:       utils.Getopt("MALICE_SCANID", utils.GetSHA256(path)),
+		ID:       id,
 		Name:     name,
 		Category: category,
 		Data:     structs.Map(results),
